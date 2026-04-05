@@ -1,0 +1,22 @@
+def contact_intensity(campaign):
+    if campaign <= 2:
+        return 'Low'
+    elif campaign <= 5:
+        return 'Medium'
+    else:
+        return 'High'
+
+df['contact_intensity'] = df['campaign'].apply(contact_intensity)
+df['contact_intensity'] = df['contact_intensity'].astype('category')
+
+# Measures how frequently a customer is contacted by the bank (calls, emails, campaigns).
+
+# High contact intensity may indicate:
+
+# Strong marketing focus on a valuable customer, or
+
+# Customer dissatisfaction or hesitation.
+
+# Helps evaluate marketing effectiveness and avoid over-contacting customers, which can negatively impact satisfaction.
+
+# Enables better modeling of customer engagement and response probability.
