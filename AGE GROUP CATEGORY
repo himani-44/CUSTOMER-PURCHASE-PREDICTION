@@ -1,0 +1,26 @@
+
+def age_group(age):
+    if age >= 18 and age <= 30:
+        return 'Young Adult'
+    elif age>= 31 and age <= 45:
+        return 'Adult'
+        
+    elif age>= 46 and age <= 60:
+        return 'Middle-Aged'
+    else:
+        return 'Senior'
+
+df['age_group'] = df['age'].apply(age_group)
+df['age_group'] = df['age_group'].astype('category')
+
+# Different age groups have distinct financial behaviors:
+
+# Young adults are more likely to use digital banking and have lower balances.
+
+# Middle-aged customers often hold loans, mortgages, and savings products.
+
+# Seniors typically have stable deposits and lower credit risk.
+
+# Grouping age improves model interpretability and helps identify target customer segments for banking products.
+
+# Reduces sensitivity to outliers and avoids assuming a linear relationship between age and banking outcomes.
