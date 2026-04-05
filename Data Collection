@@ -1,0 +1,13 @@
+import zipfile
+import os
+import pandas as pd 
+os.listdir()
+zip_path = "bank.zip"
+with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+    zip_ref.extractall("bank")
+os.listdir("bank")
+df = pd.read_csv("bank/bank.csv",sep=";")
+df.head()
+df.head(10)
+df.shape
+df.info()
