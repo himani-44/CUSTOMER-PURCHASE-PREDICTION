@@ -1,0 +1,178 @@
+import pandas as pd
+import numpy as np
+
+# ML Libraries
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+
+# Visualization
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Load dataset
+df = pd.read_csv("bank/bank.csv")
+df.head()
+
+
+X = df.drop(columns=['deposit'])
+y = df['deposit']
+
+
+categorical_cols = X.select_dtypes(include='object').columns
+
+X = pd.get_dummies(X, columns=categorical_cols, drop_first=True)
+
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42, stratify=y
+)
+
+
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+
+lr = LogisticRegression(random_state=42)
+lr.fit(X_train_scaled, y_train)
+y_pred_lr = lr.predict(X_test_scaled)
+
+dt = DecisionTreeClassifier(random_state=56)
+dt.fit(X_train, y_train)
+y_pred_dt = dt.predict(X_test)
+
+rf = RandomForestClassifier(n_estimators=100, random_state=42)
+rf.fit(X_train, y_train)
+y_pred_rf = rf.predict(X_test)
+
+
+accuracy = {
+    'Logistic Regression': accuracy_score(y_test, y_pred_lr),
+    'Decision Tree': accuracy_score(y_test, y_pred_dt),
+    'Random Forest': accuracy_score(y_test, y_pred_rf)
+}
+accuracy
+
+models_preds = {'Logistic Regression': y_pred_lr,
+                'Decision Tree': y_pred_dt,
+                'Random Forest': y_pred_rf}
+
+for model, y_pred in models_preds.items():
+    cm = confusion_matrix(y_test, y_pred)
+    print(f"{model} Confusion Matrix:\n", cm, "\n")
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Greys')
+    plt.title(f'{model} Confusion Matrix')
+    plt.xlabel('Predicted')
+    plt.ylabel('Actual')
+    plt.show()
+
+
+
+comparison = pd.DataFrame({
+    'Model': ['Logistic Regression', 'Decision Tree', 'Random Forest'],
+    'Accuracy': [accuracy_score(y_test, y_pred_lr),
+                 accuracy_score(y_test, y_pred_dt),
+                 accuracy_score(y_test, y_pred_rf)]
+})
+comparison
+
+test_results = pd.DataFrame({
+    'Actual': y_test[:20].values,
+    'Predicted': y_pred_rf[:20]
+})
+test_results
+
+
+
+# Sample customer profile
+sample = {
+    "age": 42,
+    "job": "management",
+    "marital": "married",
+    "education": "tertiary",
+    "balance": 6000,
+    "housing": "yes",
+    "loan": "no",
+    "contact": "cellular",
+    "campaign": 2,
+    "poutcome": "success"
+}
+
+# Convert to DataFrame
+sample_df = pd.DataFrame([sample])
+
+# Apply feature engineering
+sample_df['age_group'] = sample_df['age'].apply(lambda x: 'Young Adult' if x<=30 else ('Adult' if x<=45 else ('Middle-Aged' if x<=60 else 'Senior')))
+sample_df['balance_category'] = sample_df['balance'].apply(lambda x: 'Low' if x<1000 else ('Medium' if x<=5000 else 'High'))
+sample_df['contact_intensity'] = sample_df['campaign'].apply(lambda x: 'Low' if x<=2 else ('Medium' if x<=5 else 'High'))
+
+# Drop raw columns if needed and encode categorical features
+sample_df_encoded = pd.get_dummies(sample_df, columns=['job','marital','education','housing','loan','contact','poutcome','age_group','balance_category','contact_intensity'], drop_first=True)
+
+# Align columns with training data
+sample_df_encoded = sample_df_encoded.reindex(columns=X_train.columns, fill_value=0)
+
+# Scale features
+sample_scaled = scaler.transform(sample_df_encoded)
+
+# Predict
+prediction = rf.predict(sample_scaled)[0]
+prediction_prob = rf.predict_proba(sample_scaled)[0][1]
+
+print(f"Predicted Deposit: {prediction} (1=Yes, 0=No)")
+print(f"Probability of subscription: {prediction_prob:.2f}")
+
+
+import os 
+os.getcwd()
+os.makedirs("models", exist_ok=True)
+joblib.dump(X_train.columns, "models/X_train_columns.pkl")
+model_path = os.path.join(os.getcwd(), "models")
+os.makedirs(model_path, exist_ok=True)
+
+joblib.dump(X_train.columns, os.path.join(model_path, "X_train_columns.pkl"))
+import os
+print("Working directory:", os.getcwd())
+print("Can write here?", os.access(os.getcwd(), os.W_OK))
+
+from imblearn.over_sampling import SMOTE
+
+smote = SMOTE(random_state=42)
+X_train_res, y_train_res = smote.fit_resample(X_train_scaled, y_train)
+
+print("Before SMOTE:", y_train.value_counts())
+print("After SMOTE:", pd.Series(y_train_res).value_counts())
+
+from sklearn.model_selection import cross_val_score
+
+rf = RandomForestClassifier(n_estimators=100, random_state=42)
+
+# 5-fold cross-validation
+cv_scores = cross_val_score(rf, X_train_res, y_train_res, cv=5, scoring='accuracy')
+
+print("Cross-validation scores:", cv_scores)
+print("Mean CV accuracy:", cv_scores.mean())
+
+
+import matplotlib.pyplot as plt
+
+
+rf.fit(X_train_res, y_train_res)
+
+
+importances = rf.feature_importances_
+features = X_train.columns
+feat_importance = pd.Series(importances, index=features).sort_values(ascending=False)
+
+plt.figure(figsize=(15,9))
+feat_importance.head(10).plot(kind='barh')
+plt.title("Top 10 Feature Importances")
+plt.xlabel("Importance")
+plt.ylabel("Feature")
+plt.gca().invert_yaxis()
+plt.show()
+
