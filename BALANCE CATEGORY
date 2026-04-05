@@ -1,0 +1,24 @@
+def balance_category(balance):
+    if balance < 1500:
+        return 'Low'
+    elif balance <= :
+        return 'Medium'
+    else:
+        return 'High'
+
+df['balance_category'] = df['balance'].apply(balance_category)
+df['balance_category'] = df['balance_category'].astype('category')
+
+# Account balance reflects a customer’s financial stability and creditworthiness.
+
+# Helps distinguish high-value customers from low-balance or at-risk customers.
+
+# Supports better predictions for:
+
+# Loan approval likelihood
+
+# Deposit product targeting
+
+# Customer churn or retention
+
+# Categorization reduces skewness in financial data, which is common in banking datasets.
