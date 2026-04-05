@@ -1,0 +1,129 @@
+# BEFORE THAT LETS COMBINE ALL AND THEN 
+
+print(df[['age_group','balance_category','contact_intensity']].head(10))
+
+# Value counts
+print(df['age_group'].value_counts())
+print(df['balance_category'].value_counts())
+print(df['contact_intensity'].value_counts())
+
+
+df.to_csv("bank/bank.csv", index=False)
+
+# 3.1 Univariate Analysis
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+df = pd.read_csv("bank/bank.csv")
+
+df.head(10)
+df.info()
+
+
+# Distribution of age
+
+plt.figure(figsize=(12,7))
+sns.histplot(df['age'], bins=30, kde=True, color='red')
+plt.title('Age-Distribution')
+plt.xlabel('Age')
+plt.ylabel('Frequency')
+plt.show()
+
+# Distribution of balance
+plt.figure(figsize=(12,7))
+sns.histplot(df['balance'], bins=35, kde=True, color='brown')
+plt.title('Balance-Distribution')
+plt.xlabel('Balance')
+plt.ylabel('Frequency')
+plt.show()
+
+#Countplot of job
+plt.figure(figsize=(11,5))
+sns.countplot(y=df['job'], order=df['job'].value_counts().index, palette='cubehelix')
+plt.title('Job-Distribution')
+plt.xlabel('Count')
+plt.ylabel('Job')
+plt.show()
+
+
+# Countplot of target variable (y)
+plt.figure(figsize=(9,8))
+sns.countplot(x=df['deposit'], palette='viridis')
+plt.title('Term Deposit Subscription (Target)')
+plt.xlabel('Deposit (0=No, 1=Yes)')
+plt.ylabel('Count')
+plt.show()
+
+
+# 3.2 Bivariate Analysis
+#1. Does balance affect term deposit subscription?
+
+plt.figure(figsize=(11,7))
+sns.boxplot(x='deposit', y='balance', data=df, palette='Set3')
+plt.title('Balance vs Deposit')
+plt.xlabel('Deposit')
+plt.ylabel('Balance')
+plt.show()
+
+
+
+
+# 2) Is there a relationship between age group and subscription?
+age_deposit = pd.crosstab(df['age_group'], df['deposit'], normalize='index')
+
+age_deposit.plot(kind='bar', stacked=True, figsize=(11,8), color=['green','orange'])
+plt.title('Deposit by Age Group')
+plt.ylabel('Proportion')
+plt.xlabel('Age Group')
+plt.legend(['No','Yes'])
+plt.show()
+
+
+
+# 3. Does the number of contacts (campaign) affect success rate?
+campaign_success = df.groupby('contact_intensity')['deposit'].mean()
+campaign_success.plot(kind='bar', figsize=(9,7), color='mediumblue')
+plt.title('Subscription Rate by Contact Intensity')
+plt.ylabel('Mean Deposit Rate')
+plt.xlabel('Contact Intensity')
+plt.show()
+
+
+# 4. Which job types subscribe more frequently?
+job_deposit = df.groupby('job')['deposit'].mean().sort_values(ascending=False)
+
+plt.figure(figsize=(12,6))
+job_deposit.plot(kind='bar', color='salmon')
+plt.title('Subscription Rate by Job Type')
+plt.ylabel('Mean Deposit Rate')
+plt.xlabel('Job Type')
+plt.show()
+
+
+# 5 Does education level influence subscription?
+
+plt.figure(figsize=(13,7))
+sns.countplot(x='education', hue='deposit', data=df, palette='seismic')
+plt.title('Education vs Deposit')
+plt.xlabel('Education Level')
+plt.ylabel('Count')
+plt.show()
+
+
+3.3 Insight Summary
+
+1)Age Influence on Subscription
+Middle-aged and senior customers subscribe to term deposits more frequently than younger customers, indicating higher financial stability and long-term savings goals.
+
+2)Balance and Subscription Relationship
+Customers with higher account balances show a significantly higher subscription rate, confirming balance as a strong indicator of conversion potential.
+
+3)Effect of Contact Frequency
+Moderate campaign contacts result in higher success rates, while excessive contacts reduce subscriptions, suggesting customer fatigue from over-marketing.
+
+4)Job Type Conversion Patterns
+Customers in management, administrative, and retired job roles subscribe more often compared to blue-collar workers and students, reflecting income stability and lower risk.
+
+5)Role of Education Level
+Customers with secondary and tertiary education levels have higher subscription rates, likely due to better financial awareness and understanding of term deposit benefits.
